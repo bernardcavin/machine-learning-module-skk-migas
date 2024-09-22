@@ -3,6 +3,8 @@ from flask import Flask
 from dash import Dash, _dash_renderer
 import dash_mantine_components as dmc
 import dash
+from utils.session_funcs import clear_sessions
+import os
 _dash_renderer._set_react_version("18.2.0")
 
 server = Flask(__name__)
@@ -20,6 +22,9 @@ app = dash.Dash(
 app.layout = dmc.MantineProvider(
     dash.page_container
 )
+
+os.makedirs('sessions', exist_ok=True)
+clear_sessions()
 
 if __name__ == "__main__":
     app.run_server(debug=True)

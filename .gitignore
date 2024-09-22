@@ -13,6 +13,7 @@ Dockerfile.req
 .vscode
 uploads
 .myenv.zip
+sessions
 
 app/__pycache__
 
