@@ -1,0 +1,23 @@
+myenv
+frontend/node_modules
+test.db
+demo.db
+frontend
+appSKKMigas
+docker-compose.yml
+Dockerfile.app
+Dockerfile.frontend
+Dockerfile.req
+.dockerignore
+.venv
+.vscode
+uploads
+.myenv.zip
+
+app/__pycache__
+
+# Ignore Python bytecode directories
+__pycache__
+
+
+
