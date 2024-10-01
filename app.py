@@ -12,7 +12,7 @@ server = Flask(__name__)
 server.secret_key = 'secret!'
 
 app = dash.Dash(
-    __name__, 
+    __name__,
     server=server,
     use_pages=True, 
     suppress_callback_exceptions=True, 

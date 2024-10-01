@@ -4,19 +4,10 @@ from typing import Optional, Literal
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-<<<<<<< HEAD
-from typing import List, Dict
-from dash import Input, Output, callback, html, State, dcc, MATCH, ALL
-=======
 from dash import Input, Output, callback, html, State, dcc, no_update
->>>>>>> f23d340 (regression done)
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
-<<<<<<< HEAD
-from pages.sections.regression.utils import create_table_description, session_get_file_path, session_df_to_file, session_dict_to_json
-=======
 from pages.sections.regression.utils import parse_validation_errors, create_table_description, session_get_file_path, session_df_to_file, session_dict_to_json, continue_button, reset_button
->>>>>>> 4425cc7 (1.0)
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import LinearRegression
 
@@ -69,7 +60,7 @@ def create_scatter_matrix_and_heatmap(df: pd.DataFrame):
 
 def layout():
         
-    df = pd.read_csv(session_get_file_path('preprocessed' ,extension='csv'))
+    df = pd.read_csv(session_get_file_path('preprocessed' ,extension='csv'), index_col=0)
     
     columns = df.columns.to_list()
         
@@ -118,10 +109,6 @@ def layout():
                 withBorder=True,
                 shadow=0,
             ),
-<<<<<<< HEAD
-            dmc.Button("Apply", color="blue", id='apply_feature_selection', n_clicks=0),
-            html.Div(id="feature-selection-output"),
-=======
             dmc.Button("Apply", color="blue", id='regression-apply_feature_selection', n_clicks=0),
             html.Div(id="regression-feature-selection-output"),
             dmc.Group(
@@ -133,28 +120,23 @@ def layout():
                 ],
                 justify="space-between",
             )
->>>>>>> f23d340 (regression done)
         ]
     )
     
     return layout
 
 @callback(
-<<<<<<< HEAD
-    Output("feature-selection-output", "children"),
-    Input('apply_feature_selection', 'n_clicks'),
-=======
     Output("regression-feature-selection-output", "children"),
     Output("regression-proceed-output", "children", allow_duplicate=True),
     Input('regression-apply_feature_selection', 'n_clicks'),
->>>>>>> f23d340 (regression done)
     State(ModelForm.ids.main("feature_selection", 'main'), "data"),
+    prevent_initial_call = True
 )
 def apply_feature_selection(n_clicks, form_data):
     if n_clicks > 0:
         
         try:
-            df = pd.read_csv(session_get_file_path('preprocessed', extension='csv'))
+            df = pd.read_csv(session_get_file_path('preprocessed', extension='csv'), index_col=0)
             
             session_dict_to_json(form_data, 'feature_selection')
             
@@ -179,7 +161,7 @@ def apply_feature_selection(n_clicks, form_data):
             
             session_df_to_file(df, 'feature_selected')
             
-            return output
+            return output, continue_button
             
         except ValidationError as exc:
             return html.Div(
@@ -203,7 +185,7 @@ def apply_feature_selection(n_clicks, form_data):
                         withCloseButton=True
                     )
                 ]
-            )
+            ), no_update
 
     else:
         raise PreventUpdate

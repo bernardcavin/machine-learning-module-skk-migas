@@ -4,7 +4,7 @@ from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 import flask
 import uuid
-from pages.sections.regression.utils import session_delete_file, parse_contents, render_upload_header
+from pages.sections.regression.utils import session_delete_file, parse_contents, render_upload_header, reset_button, continue_button
 
 session = {}
 
@@ -29,26 +29,6 @@ upload_button = dcc.Upload(
     },
 )
 
-<<<<<<< HEAD
-layout = dmc.Container(
-    [
-        html.Div(
-            upload_button,
-            id='upload-header'
-        ),
-        html.Div(
-            id='output-data',
-        ),
-    ],
-    fluid=True
-)
-
-@callback(
-    Output('output-data', 'children', allow_duplicate=True),
-    Output('upload-header', 'children', allow_duplicate=True),
-    Input('upload-data', 'contents'),
-    State('upload-data', 'filename'),
-=======
 def layout():
     
     layout = dmc.Stack(
@@ -80,22 +60,12 @@ def layout():
     Output('regression-proceed-output', 'children', allow_duplicate=True),
     Input('regression-upload-data', 'contents'),
     State('regression-upload-data', 'filename'),
->>>>>>> f23d340 (regression done)
     prevent_initial_call=True
 )
 def upload_data_processing(contents, filename):
     if contents is not None:
         
-        upload_header = no_update
-        
         try:
-<<<<<<< HEAD
-            
-            flask.session['session_id'] = str(uuid.uuid4())
-            
-            upload_output = parse_contents(contents, filename)
-            upload_header = render_upload_header(filename)
-=======
                 
             if flask.session.get('session_id', None) is None:
                 flask.session['session_id'] = str(uuid.uuid4())
@@ -122,7 +92,8 @@ def upload_data_processing(contents, filename):
                     }
                 )
             )
->>>>>>> f23d340 (regression done)
+            
+            return upload_output, upload_header, continue_button
             
         except Exception as e:
 
@@ -133,7 +104,7 @@ def upload_data_processing(contents, filename):
                 withCloseButton=True
             )
 
-        return upload_output, upload_header
+            return upload_output, no_update, no_update
     
     else:
         

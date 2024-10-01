@@ -5,22 +5,9 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-<<<<<<< HEAD
-from typing import List, Dict
-from dash import Input, Output, callback, html, State, dcc, MATCH, ALL
-from dash.exceptions import PreventUpdate
-import dash_mantine_components as dmc
-from pages.sections.regression.utils import create_table_description, session_get_file_path, session_df_to_file, session_json_to_dict, session_save_model
-from sklearn.feature_selection import RFE
-=======
 from dash import Input, Output, callback, html, State, dcc, no_update
 import dash_mantine_components as dmc
-<<<<<<< HEAD
-from pages.sections.regression.utils import session_get_file_path, session_json_to_dict, session_save_model,reset_button, continue_button
->>>>>>> f23d340 (regression done)
-=======
 from pages.sections.regression.utils import parse_validation_errors, session_get_file_path, session_json_to_dict, session_save_model,reset_button, continue_button
->>>>>>> 4425cc7 (1.0)
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
@@ -241,10 +228,6 @@ def layout():
     layout = dmc.Stack(
         [
             form,
-<<<<<<< HEAD
-            dmc.Button("Apply", color="blue", id='apply_model_selection', n_clicks=0),
-            html.Div(id="model-selection-output"),
-=======
             dmc.Button("Apply", color="blue", id='regression-apply_model_selection', n_clicks=0),
             html.Div(id="regression-model-selection-output"),
             dmc.Group(
@@ -256,22 +239,17 @@ def layout():
                 ],
                 justify="space-between",
             )
->>>>>>> f23d340 (regression done)
         ]
     )
     
     return layout
 
 @callback(
-<<<<<<< HEAD
-    Output("model-selection-output", "children"),
-    Input('apply_model_selection', 'n_clicks'),
-=======
     Output("regression-model-selection-output", "children"),
     Output("regression-proceed-output", "children", allow_duplicate=True),
     Input('regression-apply_model_selection', 'n_clicks'),
->>>>>>> f23d340 (regression done)
     State(ModelForm.ids.main("model_selection", 'main'), "data"),
+    prevent_initial_call = True
 )
 def apply_model_training(n_clicks, form_data):
     if n_clicks > 0:
@@ -280,12 +258,8 @@ def apply_model_training(n_clicks, form_data):
             
             feature_selection_dict = session_json_to_dict('feature_selection')
             target = feature_selection_dict.get('target')
-<<<<<<< HEAD
-            df = pd.read_csv(session_get_file_path('preprocessed', extension='csv'))
-=======
             df = pd.read_csv(session_get_file_path('preprocessed', extension='csv'), index_col=0)
             df = df[feature_selection_dict.get('selected_features')+[target]]
->>>>>>> f23d340 (regression done)
             
             model, scores, visualizations = select_train_evaluate(df, target, ModelTrainingSchema(**form_data))
             
@@ -305,9 +279,6 @@ def apply_model_training(n_clicks, form_data):
                     ),
                     dmc.SimpleGrid(visualizations, cols=len(visualizations)),
                 ]
-<<<<<<< HEAD
-            )
-=======
             ), continue_button
             
             
@@ -323,7 +294,6 @@ def apply_model_training(n_clicks, form_data):
                 ]
             ), no_update
         
->>>>>>> 4425cc7 (1.0)
         except Exception as exc:
             print(exc)
             return html.Div(
@@ -335,4 +305,4 @@ def apply_model_training(n_clicks, form_data):
                         withCloseButton=True
                     )
                 ]
-            )
+            ), no_update
