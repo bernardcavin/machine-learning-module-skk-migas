@@ -1,13 +1,15 @@
 from dash_pydantic_form import ModelForm, fields
 from pydantic import BaseModel, Field, ValidationError
-from typing import List, Optional, Union, Literal
+from typing import Optional, Literal
 import pandas as pd
-import numpy as np
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 import plotly.express as px
 import plotly.graph_objects as go
+<<<<<<< HEAD
 from typing import List, Dict
 from dash import Input, Output, callback, html, State, dcc, MATCH, ALL
+=======
+from dash import Input, Output, callback, html, State, dcc, no_update
+>>>>>>> f23d340 (regression done)
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 from pages.sections.regression.utils import create_table_description, session_get_file_path, session_df_to_file, session_dict_to_json
@@ -112,16 +114,36 @@ def layout():
                 withBorder=True,
                 shadow=0,
             ),
+<<<<<<< HEAD
             dmc.Button("Apply", color="blue", id='apply_feature_selection', n_clicks=0),
             html.Div(id="feature-selection-output"),
+=======
+            dmc.Button("Apply", color="blue", id='regression-apply_feature_selection', n_clicks=0),
+            html.Div(id="regression-feature-selection-output"),
+            dmc.Group(
+                [
+                    reset_button,
+                    html.Div(
+                        id='regression-proceed-output',
+                    )
+                ],
+                justify="space-between",
+            )
+>>>>>>> f23d340 (regression done)
         ]
     )
     
     return layout
 
 @callback(
+<<<<<<< HEAD
     Output("feature-selection-output", "children"),
     Input('apply_feature_selection', 'n_clicks'),
+=======
+    Output("regression-feature-selection-output", "children"),
+    Output("regression-proceed-output", "children", allow_duplicate=True),
+    Input('regression-apply_feature_selection', 'n_clicks'),
+>>>>>>> f23d340 (regression done)
     State(ModelForm.ids.main("feature_selection", 'main'), "data"),
 )
 def apply_feature_selection(n_clicks, form_data):

@@ -9,7 +9,7 @@ from pages.sections.regression.utils import session_delete_file, parse_contents,
 session = {}
 
 upload_button = dcc.Upload(
-    id='upload-data',
+    id='regression-upload-data',
     children=dmc.Stack([
         dmc.Flex(DashIconify(icon="ic:outline-cloud-upload", height=30),justify='center'),
         dmc.Text('Drag and Drop or Select Files'),
@@ -29,6 +29,7 @@ upload_button = dcc.Upload(
     },
 )
 
+<<<<<<< HEAD
 layout = dmc.Container(
     [
         html.Div(
@@ -47,6 +48,39 @@ layout = dmc.Container(
     Output('upload-header', 'children', allow_duplicate=True),
     Input('upload-data', 'contents'),
     State('upload-data', 'filename'),
+=======
+def layout():
+    
+    layout = dmc.Stack(
+        [
+            html.Div(
+                upload_button,
+                id='regression-upload-header'
+            ),
+            html.Div(
+                id='regression-output-data',
+            ),
+            dmc.Group(
+                [
+                    reset_button,
+                    html.Div(
+                        id='regression-proceed-output',
+                    )
+                ],
+                justify="space-between",
+            )
+        ],
+        gap='md'
+    )
+    return layout
+
+@callback(
+    Output('regression-output-data', 'children', allow_duplicate=True),
+    Output('regression-upload-header', 'children', allow_duplicate=True),
+    Output('regression-proceed-output', 'children', allow_duplicate=True),
+    Input('regression-upload-data', 'contents'),
+    State('regression-upload-data', 'filename'),
+>>>>>>> f23d340 (regression done)
     prevent_initial_call=True
 )
 def upload_data_processing(contents, filename):
@@ -55,11 +89,40 @@ def upload_data_processing(contents, filename):
         upload_header = no_update
         
         try:
+<<<<<<< HEAD
             
             flask.session['session_id'] = str(uuid.uuid4())
             
             upload_output = parse_contents(contents, filename)
             upload_header = render_upload_header(filename)
+=======
+                
+            if flask.session.get('session_id', None) is None:
+                flask.session['session_id'] = str(uuid.uuid4())
+
+            df = parse_contents(contents, filename, 'rawData')
+            upload_header = render_upload_header(filename, 'rawData')
+            
+            # df = df.describe()
+            df = df.head(5)
+            df = df.round(2)
+
+            df.reset_index(inplace=True)
+            
+            upload_output = html.Div(
+                dmc.Table(
+                    striped=True,
+                    highlightOnHover=True,
+                    withColumnBorders=True,
+                    withTableBorder=True,
+                    withRowBorders=True,
+                    data={
+                        "head": df.columns.to_list(),
+                        "body": df.values.tolist(),
+                    }
+                )
+            )
+>>>>>>> f23d340 (regression done)
             
         except Exception as e:
 
@@ -76,9 +139,9 @@ def upload_data_processing(contents, filename):
         raise PreventUpdate
 
 @callback(
-    Output('output-data', 'children'),
-    Output('upload-header', 'children'),
-    Input('remove-data', 'n_clicks'),
+    Output('regression-output-data', 'children'),
+    Output('regression-upload-header', 'children'),
+    Input('regression-rawData-remove-data', 'n_clicks'),
 )
 def remove_data(n_clicks):
 

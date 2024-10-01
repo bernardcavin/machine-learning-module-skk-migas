@@ -10,7 +10,11 @@ from typing import List, Dict
 from dash import Input, Output, callback, html, State, dcc, MATCH, ALL
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
+<<<<<<< HEAD
 from pages.sections.regression.utils import create_table_description, session_get_file_path, session_df_to_file
+=======
+from pages.sections.regression.utils import create_table_description, session_get_file_path, session_df_to_file, continue_button, reset_button, session_dict_to_json
+>>>>>>> f23d340 (regression done)
 
 class DataPreprocessingSchema(BaseModel):
     missing_value_handling: Literal["remove", "fill_mean", "fill_median", "fill_mode", "custom"] = Field(
@@ -90,7 +94,7 @@ def preprocess_and_visualize_series(series: pd.Series, schema: DataPreprocessing
 
     return visualizations
 
-def preprocess_all_and_visualize(df: pd.DataFrame, column_schemas):
+def preprocess_all_and_visualize(df: pd.DataFrame, column_schemas, preprocessed_file_name='preprocessed'):
 
     # Apply preprocessing to each column according to the schema provided
     for column, schema in column_schemas.items():
@@ -133,13 +137,14 @@ def preprocess_all_and_visualize(df: pd.DataFrame, column_schemas):
         scatter_fig = px.scatter_matrix(df, dimensions=numeric_cols, title="Scatter Matrix After Preprocessing", template='simple_white')
         scatter_fig.update_layout(margin=dict(l=20, r=20, t=50, b=20))
         
-    session_df_to_file(df, 'preprocessed')
+    session_df_to_file(df, preprocessed_file_name)
 
     # Return the processed table description and scatter plot
     return create_table_description(df), scatter_fig
 
 def create_form(column):
 
+<<<<<<< HEAD
     form = ModelForm(
         DataPreprocessingSchema,
         "data_preprocessing",
@@ -147,39 +152,85 @@ def create_form(column):
         fields_repr={
             "missing_value_handling": fields.Select(
                 options_labels={"remove": "Remove", "fill_mean": "Fill mean", "fill_median": "Fill median", "fill_mode": "Fill mode", "custom": "Custom"},
+=======
+    form = dmc.Stack(
+        [
+            dmc.Select(
+                id={'class':'regression', 'type':"missing_value_handling", 'column': column},
+                label="Missing Value Handling",
+>>>>>>> f23d340 (regression done)
                 description="Method for handling missing values",
                 default="fill_mean",
                 required=True,
             ),
+<<<<<<< HEAD
             "custom_value": {
                 "visible": ("missing_value_handling", "==", "custom"),
             },
             "scaling_method": fields.RadioItems(
                 options_labels={"standard": "Standard", "minmax": "MinMax", "robust": "Robust"},
+=======
+            dmc.NumberInput(
+                id={'class':'regression', 'type':"custom_value", 'column': column},
+                label="Custom Value",
+                description="Custom value for filling missing data, used if missing_value_handling is 'custom'",
+                value=0,
+                required=False,
+                display="none",
+            ),
+            dmc.Select(
+                id={'class':'regression', 'type':"scaling_method", 'column': column},
+                label="Scaling Method",
+>>>>>>> f23d340 (regression done)
                 description="Scaling method to be applied to numerical features",
                 default="standard",
                 required=True,
             ),
+<<<<<<< HEAD
             "outlier_handling": fields.RadioItems(
                 options_labels={"remove": "Remove", "cap": "Cap", "none": "None"},
+=======
+            dmc.Select(
+                id={'class':'regression', 'type':"outlier_handling", 'column': column},
+                label="Outlier Handling",
+>>>>>>> f23d340 (regression done)
                 description="Method for handling outliers",
                 default="none",
                 required=True,
             ),
+<<<<<<< HEAD
             "cap_value": {
                 "visible": ("outlier_handling", "==", "cap"),
             },
         },
+=======
+            dmc.NumberInput(
+                id={'class':'regression', 'type':"cap_value", 'column': column},
+                label="Cap Value",
+                description="Value to cap outliers, used if outlier_handling is 'cap'",
+                value=0,
+                required=False,
+                display="none",
+            ),
+        ]
+>>>>>>> f23d340 (regression done)
     )
     
     return dmc.Stack(
         [
             form,
             dmc.Flex(
+<<<<<<< HEAD
                 dmc.Button("Apply", color="blue", id={'type': 'apply_preprocessing', 'form_id': column}, n_clicks=0, w=200),
                 justify="end",
             ),
             html.Div(id={"type": "output", 'form_id': column}),
+=======
+                dmc.Button("Apply", color="blue", id={'class':'regression', 'type': 'apply_preprocessing', 'column': column}, n_clicks=0, w=200),
+                justify="end",
+            ),
+            html.Div(id={'class':'regression', 'type': "output", 'column': column}),
+>>>>>>> f23d340 (regression done)
         ]
     )
 
@@ -238,20 +289,69 @@ def layout():
         [
             create_table_description(df),
             tabs,
+<<<<<<< HEAD
             dmc.Button("Apply All Preprocessing", color="green", id='apply_preprocessing', n_clicks=0),
             html.Div(id="output"),
+=======
+            dmc.Button("Apply All Preprocessing", color="green", id='regression-apply_preprocessing', n_clicks=0),
+            html.Div(id="regression-output"),
+            dmc.Group(
+                [
+                    reset_button,
+                    html.Div(
+                        id='regression-proceed-output',
+                    )
+                ],
+                justify="space-between",
+            )
+>>>>>>> f23d340 (regression done)
         ]
     )
     
     return layout
 
 @callback(
+<<<<<<< HEAD
     Output({"type": "output", 'form_id': MATCH},'children'),
     Input({"type": "apply_preprocessing", 'form_id': MATCH}, 'n_clicks'),
     State(ModelForm.ids.main("data_preprocessing", MATCH), "data"),
     State({"type": "apply_preprocessing", 'form_id': MATCH}, 'id'),
 )
 def preprcess_each_column(n_clicks, form_data, button_id):
+=======
+    Output({'class':'regression', 'type': "custom_value", 'column': MATCH}, 'display'),
+    Input({'class':'regression', 'type': "missing_value_handling", 'column': MATCH}, 'value'),
+    prevent_initial_call=True
+)
+def toggle_custom_value(value):
+    if value == "custom":
+        return "block"
+    else:
+        return "none"
+
+@callback(
+    Output({'class':'regression', 'type': "cap_value", 'column': MATCH}, 'display'),
+    Input({'class':'regression', 'type': "outlier_handling", 'column': MATCH}, 'value'),
+    prevent_initial_call=True
+)
+def toggle_cap_value(value):
+    if value == "cap":
+        return "block"
+    else:
+        return "none"
+
+@callback(
+    Output({'class':'regression', 'type': "output", 'column': MATCH},'children'),
+    Input({'class':'regression', 'type': "apply_preprocessing", 'column': MATCH}, 'n_clicks'),
+    State({'class':'regression', 'type': 'missing_value_handling', 'column': MATCH}, 'value'),
+    State({'class':'regression', 'type': 'custom_value', 'column': MATCH}, 'value'),
+    State({'class':'regression', 'type': 'scaling_method', 'column': MATCH}, 'value'),
+    State({'class':'regression', 'type': 'outlier_handling', 'column': MATCH}, 'value'),
+    State({'class':'regression', 'type': 'cap_value', 'column': MATCH}, 'value'),
+    State({'class':'regression', 'type': "apply_preprocessing", 'column': MATCH}, 'id'),
+)
+def preprcess_each_column(n_clicks, missing_value_handling, custom_value, scaling_method, outlier_handling, cap_value, button_id):
+>>>>>>> f23d340 (regression done)
     if n_clicks > 0:
         
         column = button_id['form_id']
@@ -292,10 +392,23 @@ def preprcess_each_column(n_clicks, form_data, button_id):
         raise PreventUpdate
     
 @callback(
+<<<<<<< HEAD
     Output("output", "children"),
     Input('apply_preprocessing', 'n_clicks'),
     State(ModelForm.ids.main("data_preprocessing", ALL), "data"),
     State({"type": "apply_preprocessing", 'form_id': ALL}, 'id'),
+=======
+    Output("regression-output", "children"),
+    Output("regression-proceed-output", "children", allow_duplicate=True),
+    Input('regression-apply_preprocessing', 'n_clicks'),
+    State({'class':'regression', 'type': 'missing_value_handling', 'column': ALL}, 'value'),
+    State({'class':'regression', 'type': 'custom_value', 'column': ALL}, 'value'),
+    State({'class':'regression', 'type': 'scaling_method', 'column': ALL}, 'value'),
+    State({'class':'regression', 'type': 'outlier_handling', 'column': ALL}, 'value'),
+    State({'class':'regression', 'type': 'cap_value', 'column': ALL}, 'value'),
+    State({'class':'regression', 'type': "apply_preprocessing", 'column': ALL}, 'id'),
+    prevent_initial_call = True
+>>>>>>> f23d340 (regression done)
 )
 def preprocess_all(n_clicks, form_datas, button_ids):
     if n_clicks > 0:
@@ -304,9 +417,25 @@ def preprocess_all(n_clicks, form_datas, button_ids):
         
         try:
             
+<<<<<<< HEAD
             columns_schemas = {columns[i]: form_datas[i] for i in range(len(columns))}
             
             df = pd.read_csv(session_get_file_path('rawdata', extension='csv'))
+=======
+            schemas = [{
+                    'missing_value_handling': missing_value_handling,
+                    'custom_value': custom_value,
+                    'scaling_method': scaling_method,
+                    'outlier_handling': outlier_handling,
+                    'cap_value': cap_value
+                } for missing_value_handling, custom_value, scaling_method, outlier_handling, cap_value in zip(missing_value_handlings, custom_values, scaling_methods, outlier_handlings, cap_values)
+            ]
+            
+            columns_schemas = {columns[i]: schemas[i] for i in range(len(columns))}
+            session_dict_to_json(columns_schemas, 'preprocessing')
+            
+            df = pd.read_csv(session_get_file_path('rawdata', extension='csv'), index_col=0)
+>>>>>>> f23d340 (regression done)
             
             result = preprocess_all_and_visualize(df, columns_schemas)
 
@@ -320,6 +449,12 @@ def preprocess_all(n_clicks, form_datas, button_ids):
             return output
             
         except Exception as exc:
+<<<<<<< HEAD
+=======
+            
+            print(exc)
+            
+>>>>>>> f23d340 (regression done)
             return html.Div(
                 [
                     dmc.Alert(

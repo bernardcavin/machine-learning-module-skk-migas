@@ -65,17 +65,38 @@ def layout():
                 withBorder=True,
                 shadow=0,
             ),
+<<<<<<< HEAD
             dmc.Button("Download", color="green", id='apply_model_export', n_clicks=0),
             html.Div(id="model-export-output"),
             dcc.Download(id="download-model"),
+=======
+            dmc.Button("Download", color="green", id='regression-apply_model_export', n_clicks=0),
+            html.Div(id="regression-model-export-output"),
+            dcc.Download(id="regression-download-model"),
+            dmc.Group(
+                [
+                    reset_button,
+                    html.Div(
+                        id='regression-proceed-output',
+                    )
+                ],
+                justify="space-between",
+            )
+>>>>>>> f23d340 (regression done)
         ]
     )
     
     return layout
 
 @callback(
+<<<<<<< HEAD
     Output("model-export-output", "children"),
     Input('apply_model_export', 'n_clicks'),
+=======
+    Output("regression-model-export-output", "children"),
+    Output("regression-download-model", "data"),
+    Input('regression-apply_model_export', 'n_clicks'),
+>>>>>>> f23d340 (regression done)
     State(ModelForm.ids.main("model_export", 'main'), "data"),
 )
 def apply_model_export(n_clicks, form_data):

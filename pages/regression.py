@@ -4,7 +4,7 @@ import flask
 import uuid
 dash.register_page(__name__)
 
-from pages.sections.regression import feature_selection, model_training, upload_data, data_preprocessing, model_export
+from pages.sections.regression import feature_selection, model_training, upload_data, data_preprocessing, model_export, prediction
 import dash_mantine_components as dmc
 from dash import callback, Output, Input, State, ctx
 from dash_iconify import DashIconify
@@ -51,6 +51,13 @@ step_pages = [
         layout=model_training.layout
     ),
     StepPage(
+        title="Prediction",
+        name="prediction",
+        icon="mdi:cog",
+        description="Predict",
+        layout=prediction.layout
+    ),
+    StepPage(
         title="Model Export",
         name="model_export",
         icon="mdi:download",
@@ -65,6 +72,7 @@ min_step = 0
 max_step = len(step_pages)
 active = 0
 
+<<<<<<< HEAD
 loader = dmc.Flex(dmc.Loader(color="blue", size="xl"), justify="center")
 
 content = dmc.Tabs(
@@ -75,20 +83,39 @@ content = dmc.Tabs(
             value=step_page.name,
         ) for i,step_page in enumerate(step_pages)
     ],
+=======
+def render_step_page(step_page: StepPage):
+    
+    return dmc.Container(
+        dmc.Stack(
+            [
+                dmc.Group(
+                    [
+                        DashIconify(icon=step_page.icon, height=30),
+                        dmc.Title(step_page.title, size=30),
+                    ],
+                    gap=5
+                ),
+                html.Div(
+                    step_page.layout if not callable(step_page.layout) else step_page.layout()
+                )
+            ]
+        ),
+        fluid=True,
+    )
+
+content = html.Div(
+    render_step_page(step_pages[0]),
+>>>>>>> f23d340 (regression done)
     id='regression-content',
-    value=step_pages[0].name,
 )
+
 
 
 def layout():
     
     states = []
     
-    for i, step_page in enumerate(step_pages):
-        
-        flask.session[step_page.name] = False if i!=0 else True
-        states.append(dcc.Store(id={'type':'state','index':step_page.name}, data=False))
-        
     layout = dmc.Container(
         states + [
             dmc.Grid(
@@ -173,28 +200,29 @@ def update_with_icons(back, next_, current):
     
     return step, name, states
 
-@callback(
-    Output({'type':'step_page','index':MATCH}, "children"),
-    Input({'type':'state','index':MATCH}, "data"),
-    prevent_initial_call=True,
-)
-def update_tab(active):
+# @callback(
+#     Output({'type':'step_page','index':MATCH}, "children"),
+#     Input({'type':'state','index':MATCH}, "data"),
+#     prevent_initial_call=True,
+# )
+# def update_tab(active):
     
-    page = ctx.triggered_id['index']
-    had_opened = flask.session[page]
+#     page = ctx.triggered_id['index']
+#     had_opened = flask.session[page]
     
-    if not had_opened:
+#     if not had_opened:
         
-        layout = layout_dict[page]
+#         layout = layout_dict[page]
         
-        content = layout() if callable(layout) else layout
+#         content = layout() if callable(layout) else layout
         
-        flask.session[page] = True
+#         flask.session[page] = True
         
-        return content
+#         return content
     
-    else:
+#     else:
         
+<<<<<<< HEAD
         raise dash.exceptions.PreventUpdate
 
 # dmc.StepperStep(
@@ -261,3 +289,6 @@ def update_tab(active):
 #         )
 #     ]
 # )
+=======
+#         raise dash.exceptions.PreventUpdate
+>>>>>>> f23d340 (regression done)
