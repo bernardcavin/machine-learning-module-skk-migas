@@ -76,15 +76,15 @@ layout = dmc.SimpleGrid(
                                     title="Classification",
                                     image="assets/classification.png",
                                     description="Classification is a supervised learning task that involves predicting a discrete target variable based on one or more input features.",
-                                    link="/page-1",
-                                    page_state=PageState.OFFLINE
+                                    link="/classification",
+                                    page_state=PageState.ONLINE
                                 ),
                                 FeatureCard(
                                     title="Clustering",
                                     image="assets/clustering.png",
                                     description="Clustering is a supervised learning task that involves grouping data points based on their similarity",
-                                    link="/page-3",
-                                    page_state=PageState.OFFLINE
+                                    link="/clustering",
+                                    page_state=PageState.ONLINE
                                 ),
                             ],
                             cols=3,

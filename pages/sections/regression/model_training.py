@@ -15,8 +15,12 @@ from sklearn.feature_selection import RFE
 =======
 from dash import Input, Output, callback, html, State, dcc, no_update
 import dash_mantine_components as dmc
+<<<<<<< HEAD
 from pages.sections.regression.utils import session_get_file_path, session_json_to_dict, session_save_model,reset_button, continue_button
 >>>>>>> f23d340 (regression done)
+=======
+from pages.sections.regression.utils import parse_validation_errors, session_get_file_path, session_json_to_dict, session_save_model,reset_button, continue_button
+>>>>>>> 4425cc7 (1.0)
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
@@ -26,6 +30,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, RandomizedSearchCV
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from pydantic import ValidationError
 
 class ModelTrainingSchema(BaseModel):
     ml_model_type: Literal["linear", "ridge", "lasso", "elasticnet", "decision_tree"] = Field(
@@ -300,15 +305,34 @@ def apply_model_training(n_clicks, form_data):
                     ),
                     dmc.SimpleGrid(visualizations, cols=len(visualizations)),
                 ]
+<<<<<<< HEAD
             )
+=======
+            ), continue_button
+            
+            
+        except ValidationError as exc:
+            return html.Div(
+                [
+                    dmc.Alert(
+                        parse_validation_errors(exc),
+                        color="red",
+                        variant="filled",
+                        withCloseButton=True
+                    )
+                ]
+            ), no_update
+        
+>>>>>>> 4425cc7 (1.0)
         except Exception as exc:
             print(exc)
             return html.Div(
                 [
                     dmc.Alert(
-                        "There was an error applying model selection.",
+                        "There was an error applying model training.",
                         color="red",
                         variant="filled",
+                        withCloseButton=True
                     )
                 ]
             )

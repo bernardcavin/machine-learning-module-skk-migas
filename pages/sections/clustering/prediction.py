@@ -5,21 +5,21 @@ from dash_iconify import DashIconify
 import flask
 import uuid
 from pydantic import BaseModel, Field
-from pages.sections.regression.utils import parse_validation_errors, session_df_to_file, session_get_file_path, session_delete_file, parse_contents, render_upload_header, reset_button, continue_button, create_table_description, session_json_to_dict
+from pages.sections.clustering.utils import parse_validation_errors, session_df_to_file, session_get_file_path, session_delete_file, parse_contents, render_upload_header, reset_button, continue_button, create_table_description, session_json_to_dict
 from typing import Literal, Optional
 from dash_pydantic_form import ModelForm, fields
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.graph_objs import Figure
-from pages.sections.regression.data_preprocessing import preprocess_all_and_visualize
+from pages.sections.clustering.data_preprocessing import preprocess_all_and_visualize
 from pydantic import ValidationError
 import joblib
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
+import plotly.express as px
 
 session = {}
 
 upload_button = dcc.Upload(
-    id='regression-prediction-upload-data',
+    id='clustering-prediction-upload-data',
     children=dmc.Stack([
         dmc.Flex(DashIconify(icon="ic:outline-cloud-upload", height=30),justify='center'),
         dmc.Text('Drag and Drop or Select Files'),
@@ -47,76 +47,66 @@ class PredictionFeatureSelectionSchema(BaseModel):
         description="Prediction column name",
         default="prediction"
     )
+    plot_x_column: str = Field(
+        description="Column to plot on the x-axis",
+        default="input"
+    )
     plot_y_column: str = Field(
         description="Column to plot on the y-axis",
         default="prediction"
     )
 
-def create_prediction_plot(features_df: pd.DataFrame, predictions: list, y_axis: str) -> Figure:
-    # Creating a scatter plot comparing input features with the predictions
-    fig = go.Figure()
-    
-    fig.add_trace(
-        go.Scatter(
-            x=predictions,
-            y=features_df[y_axis],
-            mode='markers',
-        )
+def create_prediction_plot(features_df: pd.DataFrame, predictions: list, x_axis: str, y_axis: str) -> go.Figure:
+
+    # Add predictions as a column in the DataFrame for coloring
+    plot_df = features_df.copy()
+    plot_df['Cluster'] = [f"Cluster {clst}" for clst in predictions]
+
+    # Create a scatter plot with x, y features, and color as the predicted labels
+    fig = px.scatter(
+        plot_df,
+        x=x_axis,
+        y=y_axis,
+        color='Cluster',
+        title=f'Scatter Plot of {x_axis} vs {y_axis} with Cluster',
+        labels={'color': 'Cluster'},
+        # color_continuous_scale=px.colors.qualitative.Safe,  # Use a qualitative color scale for categorical labels
     )
 
-    # Add layout information
+    # Update layout for better visualization
     fig.update_layout(
-        title=f"Predicted Values vs {y_axis}",
-        xaxis_title="Predicted Values",
+        xaxis_title=x_axis,
         yaxis_title=y_axis,
-        template="plotly_white"
+        legend_title='Cluster',
+        template='plotly_white'
     )
-    
+
     return fig
 
-def predict_and_visualize_regression_model(schema: PredictionFeatureSelectionSchema) -> dict:
+def predict_and_visualize_clustering_model(schema: PredictionFeatureSelectionSchema) -> dict:
     
     preprocessing_dict = session_json_to_dict('preprocessing')
-    feature_selection_dict = session_json_to_dict('feature_selection')
 
     raw_df = pd.read_csv(session_get_file_path('predictionData', extension='csv'), index_col=0)
-
-    feature_df_cut = raw_df[schema.selected_features]
+    feature_df = raw_df[schema.selected_features]
     processed_preprocessed_dict = {
         column: preprocessing_dict.get(
             column,
             preprocessing_dict.get(list(preprocessing_dict.keys())[0])
-            ) for column in feature_df_cut.columns
+            ) for column in feature_df.columns
     }
     
-    result = preprocess_all_and_visualize(feature_df_cut, processed_preprocessed_dict, preprocessed_file_name='preprocessedPredictionData')
+    result = preprocess_all_and_visualize(feature_df, processed_preprocessed_dict, preprocessed_file_name='preprocessedPredictionData')
 
     with open(session_get_file_path('model', extension='joblib'), 'rb') as file:
         model = joblib.load(file)
     
-    predictions = model.predict(feature_df_cut)
-    
-    scaler_type = preprocessing_dict.get(list(preprocessing_dict.keys())[0]).get('scaling_method')
-    # Instantiate the corresponding scaler
-    if scaler_type == "standard":
-        scaler = StandardScaler()
-    elif scaler_type == "minmax":
-        scaler = MinMaxScaler()
-    elif scaler_type == "robust":
-        scaler = RobustScaler()
-    else:
-        raise ValueError(f"Unsupported scaler type: {scaler_type}")
-    
-    train_data = pd.read_csv(session_get_file_path('rawData', extension='csv'), index_col=0)
-    
-    scaler = scaler.fit(train_data[[feature_selection_dict.get('target')]])
-
-    predictions = scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
+    predictions = model.predict(feature_df)
     
     plot_df = raw_df.copy()
     
     plot_df[plot_df.index.name if plot_df.index.name is not None else 'index'] = plot_df.index
-    visualization = create_prediction_plot(plot_df, predictions, schema.plot_y_column)
+    visualization = create_prediction_plot(raw_df, predictions, schema.plot_x_column, schema.plot_y_column)
 
     raw_df[schema.prediction_column_name] = predictions
     
@@ -137,16 +127,16 @@ def layout():
         [
             html.Div(
                 upload_button,
-                id='regression-prediction-upload-header'
+                id='clustering-prediction-upload-header'
             ),
             html.Div(
-                id='regression-prediction-upload-output-data',
+                id='clustering-prediction-upload-output-data',
             ),
             dmc.Group(
                 [
                     reset_button,
                     html.Div(
-                        id='regression-proceed-output',
+                        id='clustering-proceed-output',
                     )
                 ],
                 justify="space-between",
@@ -157,10 +147,10 @@ def layout():
     return layout
 
 @callback(
-    Output('regression-prediction-upload-output-data', 'children', allow_duplicate=True),
-    Output('regression-prediction-upload-header', 'children', allow_duplicate=True),
-    Input('regression-prediction-upload-data', 'contents'),
-    State('regression-prediction-upload-data', 'filename'),
+    Output('clustering-prediction-upload-output-data', 'children', allow_duplicate=True),
+    Output('clustering-prediction-upload-header', 'children', allow_duplicate=True),
+    Input('clustering-prediction-upload-data', 'contents'),
+    State('clustering-prediction-upload-data', 'filename'),
     prevent_initial_call=True
 )
 def upload_data_prediction(contents, filename):
@@ -172,7 +162,10 @@ def upload_data_prediction(contents, filename):
                 flask.session['session_id'] = str(uuid.uuid4())
 
             df = parse_contents(contents, filename, 'predictionData')
-            upload_header = render_upload_header(filename, 'regression-predictionData')
+            
+            df = df.select_dtypes(include=['number'])
+            
+            upload_header = render_upload_header(filename, 'predictionData')
             
             feature_selection_dict = session_json_to_dict('feature_selection')
             
@@ -191,6 +184,11 @@ def upload_data_prediction(contents, filename):
                     "prediction_column_name": fields.Text(
                         description="Prediction column name",
                         default=f"predicted_{feature_selection_dict.get('target')}",
+                        required=True,
+                    ),
+                    "plot_x_column": fields.Select(
+                        data_getter=lambda: df.columns.to_list(),
+                        description="Column to plot on the y-axis",
                         required=True,
                     ),
                     "plot_y_column": fields.Select(
@@ -212,8 +210,8 @@ def upload_data_prediction(contents, filename):
                         withBorder=True,
                         shadow=0,
                     ),
-                    dmc.Button("Predict", color="blue", id='regression-apply_prediction', n_clicks=0),
-                    html.Div(id="regression-prediction-output"),
+                    dmc.Button("Predict", color="blue", id='clustering-apply_prediction', n_clicks=0),
+                    html.Div(id="clustering-prediction-output"),
                 ]
             )
             
@@ -236,9 +234,9 @@ def upload_data_prediction(contents, filename):
         raise PreventUpdate
 
 @callback(
-    Output('regression-prediction-upload-output-data', 'children'),
-    Output('regression-prediction-upload-header', 'children'),
-    Input('regression-predictionData-remove-data', 'n_clicks'),
+    Output('clustering-prediction-upload-output-data', 'children'),
+    Output('clustering-prediction-upload-header', 'children'),
+    Input('clustering-predictionData-remove-data', 'n_clicks'),
 )
 def remove_data(n_clicks):
 
@@ -250,9 +248,9 @@ def remove_data(n_clicks):
         raise PreventUpdate
 
 @callback(
-    Output("regression-prediction-output", "children"),
-    Output("regression-proceed-output", "children", allow_duplicate=True),
-    Input('regression-apply_prediction', 'n_clicks'),
+    Output("clustering-prediction-output", "children"),
+    Output("clustering-proceed-output", "children", allow_duplicate=True),
+    Input('clustering-apply_prediction', 'n_clicks'),
     State(ModelForm.ids.main("prediction_feature_selection", 'main'), "data"),
     prevent_initial_call = True
 )
@@ -263,15 +261,15 @@ def apply_prediction(n_clicks, form_data):
             
             schema = PredictionFeatureSelectionSchema(**form_data)
             
-            result = predict_and_visualize_regression_model(schema)
+            result = predict_and_visualize_clustering_model(schema)
             
             output = dmc.Stack(
                 [
                     result['result_table'],
                     dcc.Graph(figure=result['visualization'][0], style={'height': '1000px'}),
                     dcc.Graph(figure=result['visualization'][1], style={'height': '1000px'}),
-                    dmc.Button("Download Predicted Data", color="green", id='regression-download_predicted_data_button', n_clicks=0),
-                    dcc.Download(id="regression-download-predicted-data"),
+                    dmc.Button("Download Predicted Data", color="green", id='clustering-download_predicted_data_button', n_clicks=0),
+                    dcc.Download(id="clustering-download-predicted-data"),
                 ]
             )
             
@@ -292,6 +290,7 @@ def apply_prediction(n_clicks, form_data):
         
         except Exception as exc:
             print(exc)
+            
             return html.Div(
                 [
                     dmc.Alert(
@@ -307,8 +306,8 @@ def apply_prediction(n_clicks, form_data):
         raise PreventUpdate
 
 @callback(
-    Output("regression-download-predicted-data", "data"),
-    Input('regression-download_predicted_data_button', 'n_clicks'),
+    Output("clustering-download-predicted-data", "data"),
+    Input('clustering-download_predicted_data_button', 'n_clicks'),
     prevent_initial_call=True
 )
 def download_predicted_data(n_clicks):

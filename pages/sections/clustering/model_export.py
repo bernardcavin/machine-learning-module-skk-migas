@@ -1,24 +1,11 @@
 from dash_pydantic_form import ModelForm, fields
 from pydantic import BaseModel, Field, ValidationError
-from typing import List, Optional, Union, Literal
-import pandas as pd
-import numpy as np
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
-import plotly.express as px
-import plotly.graph_objects as go
-from typing import List, Dict
-from dash import Input, Output, callback, html, State, dcc, MATCH, ALL, no_update
+from typing import Literal
+from dash import Input, Output, callback, html, State, dcc, no_update
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
-<<<<<<< HEAD
-from pages.sections.regression.utils import create_table_description, session_get_file_path, session_df_to_file, session_dict_to_json
-from sklearn.feature_selection import RFE
-from sklearn.linear_model import LinearRegression
-import pickle, joblib, io
-=======
-from pages.sections.regression.utils import parse_validation_errors, session_get_file_path, continue_button, reset_button
+from pages.sections.clustering.utils import parse_validation_errors, session_get_file_path, continue_button, reset_button
 import pickle, joblib, io, dash
->>>>>>> 4425cc7 (1.0)
 
 class ModelExportSchema(BaseModel):
     export_format: Literal["pickle", "joblib"] = Field(
@@ -70,39 +57,29 @@ def layout():
                 withBorder=True,
                 shadow=0,
             ),
-<<<<<<< HEAD
-            dmc.Button("Download", color="green", id='apply_model_export', n_clicks=0),
-            html.Div(id="model-export-output"),
-            dcc.Download(id="download-model"),
-=======
-            dmc.Button("Download", color="green", id='regression-apply_model_export', n_clicks=0),
-            html.Div(id="regression-model-export-output"),
-            dcc.Download(id="regression-download-model"),
+            dmc.Button("Download", color="green", id='clustering-apply_model_export', n_clicks=0),
+            html.Div(id="clustering-model-export-output"),
+            dcc.Download(id="clustering-download-model"),
             dmc.Group(
                 [
                     reset_button,
                     html.Div(
-                        id='regression-proceed-output',
+                        id='clustering-proceed-output',
                     )
                 ],
                 justify="space-between",
             )
->>>>>>> f23d340 (regression done)
         ]
     )
     
     return layout
 
 @callback(
-<<<<<<< HEAD
-    Output("model-export-output", "children"),
-    Input('apply_model_export', 'n_clicks'),
-=======
-    Output("regression-model-export-output", "children"),
-    Output("regression-download-model", "data"),
-    Input('regression-apply_model_export', 'n_clicks'),
->>>>>>> f23d340 (regression done)
+    Output("clustering-model-export-output", "children"),
+    Output("clustering-download-model", "data"),
+    Input('clustering-apply_model_export', 'n_clicks'),
     State(ModelForm.ids.main("model_export", 'main'), "data"),
+    prevent_initial_call=True
 )
 def apply_model_export(n_clicks, form_data):
     if n_clicks > 0:
@@ -114,7 +91,7 @@ def apply_model_export(n_clicks, form_data):
             
             export_model(model, ModelExportSchema(**form_data))
             
-            return export_model(model, ModelExportSchema(**form_data))
+            return no_update, export_model(model, ModelExportSchema(**form_data))
             
             
         except ValidationError as exc:
@@ -139,7 +116,7 @@ def apply_model_export(n_clicks, form_data):
                         withCloseButton=True
                     )
                 ]
-            )
+            ), no_update
 
     else:
         raise PreventUpdate

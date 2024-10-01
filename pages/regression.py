@@ -9,6 +9,10 @@ import dash_mantine_components as dmc
 from dash import callback, Output, Input, State, ctx
 from dash_iconify import DashIconify
 from pydantic import BaseModel
+<<<<<<< HEAD
+=======
+from pages.sections.utils import loader
+>>>>>>> 4425cc7 (1.0)
 
 def get_icon(icon):
     return DashIconify(icon=icon, height=20)
@@ -176,10 +180,50 @@ def layout():
     return layout
 
 @callback(
+<<<<<<< HEAD
     Output("regression-stepper", "active", allow_duplicate=True),
     Output("regression-content", "value"),
     Output({'type':'state','index':ALL}, "data"),
     Input("regression-back-button", "n_clicks"),
+=======
+    Output("regression-reset-modal", "opened"),
+    Input("regression-toggle-reset-modal", "n_clicks"),
+    State("regression-reset-modal", "opened"),
+    prevent_initial_call=True
+)
+def toggle_reset_modal(n_clicks, opened):
+    if n_clicks > 0:
+        return not opened
+
+@callback(
+    Output("url", "pathname", allow_duplicate=True),
+    Input("regression-go-back-button", "n_clicks"),
+    prevent_initial_call=True
+)
+def go_back(n_clicks):
+    if n_clicks > 0:
+        return '/'
+
+@callback(
+    Output("url", "pathname", allow_duplicate=True),
+    Output("url",'refresh', allow_duplicate=True),
+    Input("regression-reset-button", "n_clicks"),
+    State("url", "pathname"),
+    prevent_initial_call=True,
+)
+def reset_url(n_clicks, path):
+    if n_clicks > 0:
+        if path[-1] == '/':
+            return path[:-1], True
+        else:
+            return path+'/', True
+    else:
+        raise PreventUpdate
+
+@callback(
+    Output("regression-stepper", "active", allow_duplicate=True),
+    Output("regression-content", "children"),
+>>>>>>> 4425cc7 (1.0)
     Input("regression-next-button", "n_clicks"),
     State("regression-stepper", "active"),
     prevent_initial_call=True,

@@ -1,6 +1,9 @@
+import time
+import os
+import shutil
+import pandas as pd
 import dash_mantine_components as dmc
-<<<<<<< HEAD
-from dash import html
+from dash import html, Output, Input, callback
 import threading
 import flask
 import json
@@ -9,15 +12,9 @@ import base64
 import io
 import numpy as np
 import joblib
+import lasio
+from pathlib import Path
 
-=======
-from dash import Output, Input, callback
-from pages.sections.utils import *
->>>>>>> 4425cc7 (1.0)
-
-<<<<<<< HEAD
-def render_upload_header(filename):
-=======
 loader = dmc.Flex(dmc.Loader(color="blue", size="xl"), justify="center")
 continue_button  = dmc.Popover(
         [
@@ -26,13 +23,13 @@ continue_button  = dmc.Popover(
                 dmc.Stack(
                     [
                         dmc.Text("Are you sure you want to proceed?"),
-                        dmc.Button("Yes", id="regression-next-button", n_clicks=0, color="green", variant="filled"),
+                        dmc.Button("Yes", id="next-button", n_clicks=0, color="green", variant="filled"),
                     ],
                     gap=5
                 )
             ),
         ],
-        id='regression-next-popover',
+        id='next-popover',
         width=200,
         position="bottom",
         withArrow=True,
@@ -41,8 +38,8 @@ continue_button  = dmc.Popover(
     )
 
 @callback(
-    Output("regression-next-popover", "opened"),
-    Input("regression-next-button", "n_clicks"),
+    Output("next-popover", "opened"),
+    Input("next-button", "n_clicks"),
     prevent_initial_call=True
 )
 def toggle_next_modal(n_clicks):
@@ -51,15 +48,13 @@ def toggle_next_modal(n_clicks):
 
 reset_button = dmc.Button(
     "Reset",
-    id="regression-toggle-reset-modal",
+    id="toggle-reset-modal",
     n_clicks=0,
     color="red",
     variant="filled",
-<<<<<<< HEAD
 )
 
 def render_upload_header(filename, prefix):
->>>>>>> f23d340 (regression done)
     return dmc.Group(
         [
             dmc.ActionIcon(
@@ -76,38 +71,26 @@ def render_upload_header(filename, prefix):
             ),
         ],
         gap=5,
-        mb="md",
     )
 
-<<<<<<< HEAD
-def parse_contents(contents, filename):
-
-    content_type, content_string = contents.split(',')
-
-    decoded = base64.b64decode(content_string)
-    
-    if 'csv' in filename:
-
-        df = pd.read_csv(
-            
-            io.StringIO(decoded.decode('utf-8')))
-=======
-def parse_contents(contents, filename, finalfilename):
->>>>>>> f23d340 (regression done)
+def parse_contents(contents, filename, finalfilename, all_number=True):
         
-    elif 'xls' in filename:
-
-        df = pd.read_excel(io.BytesIO(decoded))
-        
-    df = df.select_dtypes(include=[np.number])
-    
-<<<<<<< HEAD
     create_session()
     
-    session_df_to_file(df, 'rawdata')
-=======
+    extension = session_content_to_file(contents, filename, 'initialData' )
+    
+    if extension == 'csv':
+        df = pd.read_csv(session_get_file_path('initialData', extension=extension), index_col=0)
+    elif extension == 'xlsx':
+        df = pd.read_excel(session_get_file_path('initialData', extension=extension), index_col=0)
+    elif extension == 'las':
+        log = lasio.read(session_get_file_path('initialData', extension=extension))
+        df = log.df()
+    
+    if all_number:
+        df = df.select_dtypes(include=[np.number])
+    
     session_df_to_file(df, finalfilename)
->>>>>>> f23d340 (regression done)
     
     return df
 
@@ -126,18 +109,38 @@ def create_session():
     background_thread.daemon = True
     background_thread.start()
 
+def session_content_to_file(contents, filename, finalfilename):
+    
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+
+    if 'csv' in filename:
+        extension = 'csv'
+    elif 'xls' in filename:
+        extension = 'xlsx'
+    elif 'las' in filename:
+        extension = 'las'
+    else:
+        raise Exception('Invalid file extension')
+    
+    path = 'sessions/' + flask.session['session_id'] + '/' + finalfilename + '.' + extension
+
+    with open(Path(path), 'wb') as f:
+        f.write(decoded)
+    
+    return extension
+
 def session_df_to_file(df, filename):
-    df.to_csv('sessions/' + flask.session['session_id'] + '/' + filename + '.csv', index=False)
+    df.to_csv(Path('sessions/' + flask.session['session_id'] + '/' + filename + '.csv', index=True))
     
 def session_delete_file(filename):
-    os.remove('sessions/' + flask.session['session_id'] + '/' + filename + '.csv')
+    os.remove(Path('sessions/' + flask.session['session_id'] + '/' + filename + '.csv'))
 
 def session_get_file_path(filename, extension=None):
     if extension:
-        return 'sessions/' + flask.session['session_id'] + '/' + filename + '.' + extension
+        return Path('sessions/' + flask.session['session_id'] + '/' + filename + '.' + extension)
     else:
-        return 'sessions/' + flask.session['session_id'] + '/' + filename
-
+        return Path('sessions/' + flask.session['session_id'] + '/' + filename)
 
 def create_table_description(df: pd.DataFrame):
 
@@ -166,23 +169,23 @@ def create_table_description(df: pd.DataFrame):
 
 def session_dict_to_json(dict, filename):
     path = 'sessions/' + flask.session['session_id'] + '/' + filename + '.json'
-    with open(path, 'w') as json_file:
+    with open(Path(path), 'w') as json_file:
         json.dump(dict, json_file)
 
 def session_json_to_dict(filename):
     path = 'sessions/' + flask.session['session_id'] + '/' + filename + '.json'
-    with open(path, 'r') as json_file:
+    with open(Path(path), 'r') as json_file:
         return json.load(json_file)
 
 def session_save_model(model, filename):
     path = 'sessions/' + flask.session['session_id'] + '/' + filename + '.joblib'
-    joblib.dump(model, path)
+    joblib.dump(model, Path(path))
 
-# from pages.regression import step_pages
-
-# def reset_session():
-#     for i, step_page in enumerate(step_pages):
-#         flask.session[step_page.name] = False if i!=0 else True
-=======
-)
->>>>>>> 4425cc7 (1.0)
+def parse_validation_errors(error):
+    readable_errors = []
+    for err in error.errors():
+        loc = " -> ".join(str(l) for l in err['loc'])  # Converts location tuple to string
+        msg = err['msg']  # Error message
+        type_ = err['type']  # Error type
+        readable_errors.append(f"Error in {loc}: {msg} (Type: {type_})")
+    return readable_errors

@@ -4,49 +4,22 @@ from typing import Optional, Literal
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-<<<<<<< HEAD
-from typing import List, Dict
-from dash import Input, Output, callback, html, State, dcc, MATCH, ALL
-=======
 from dash import Input, Output, callback, html, State, dcc, no_update
->>>>>>> f23d340 (regression done)
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
-<<<<<<< HEAD
-from pages.sections.regression.utils import create_table_description, session_get_file_path, session_df_to_file, session_dict_to_json
-=======
-from pages.sections.regression.utils import parse_validation_errors, create_table_description, session_get_file_path, session_df_to_file, session_dict_to_json, continue_button, reset_button
->>>>>>> 4425cc7 (1.0)
+from pages.sections.clustering.utils import parse_validation_errors, create_table_description, session_get_file_path, session_df_to_file, session_dict_to_json, continue_button, reset_button
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import LinearRegression
 
 class FeatureSelectionSchema(BaseModel):
-    method: Literal["manual", "RFE", "auto"] = Field(
-        'manual', 
-        description="Feature selection method",
-    )
     selected_features: Optional[list[str]] = Field( # type: ignore
         description="List of selected features if manual selection is used",
         default_factory=list
     )
-    target: str = Field(
-        description="Target column",
-    )
-
-def feature_selection(df: pd.DataFrame, target: str, schema) -> pd.DataFrame:
-    if schema.method == "manual" and schema.selected_features:
-        features = schema.selected_features
-        return df[features + [target]]
-    elif schema.method == "RFE":
-        X = df.drop(columns=[target])
-        y = df[target]
-        model = LinearRegression()
-        rfe = RFE(model, n_features_to_select=5)
-        rfe.fit(X, y)
-        selected_features = X.columns[rfe.support_]
-        return df[selected_features.to_list() + [target]]
-    else:
-        return df
+    
+def feature_selection(df: pd.DataFrame, schema) -> pd.DataFrame:
+    features = schema.selected_features
+    return df[features]
 
 def create_scatter_matrix_and_heatmap(df: pd.DataFrame):
     # Scatter matrix
@@ -69,7 +42,7 @@ def create_scatter_matrix_and_heatmap(df: pd.DataFrame):
 
 def layout():
         
-    df = pd.read_csv(session_get_file_path('preprocessed' ,extension='csv'))
+    df = pd.read_csv(session_get_file_path('preprocessed' ,extension='csv'), index_col=0)
     
     columns = df.columns.to_list()
         
@@ -78,21 +51,9 @@ def layout():
         "feature_selection",
         "main",
         fields_repr={
-            "method": fields.Select(
-                options_labels={"manual": "Manual", "RFE": "RFE", "auto": "Auto"},
-                description="Feature selection method",
-                required=True,
-            ),
-            "selected_features": {
-                "visible": ("method", "==", "manual"),
-            },
             "selected_features": fields.MultiSelect(
                 data_getter=lambda: columns,
                 description="List of selected features if manual selection is used",
-            ),
-            'target': fields.Select(
-                data_getter=lambda: columns,
-                description="Target column",
                 required=True,
             ),
         },
@@ -118,49 +79,40 @@ def layout():
                 withBorder=True,
                 shadow=0,
             ),
-<<<<<<< HEAD
-            dmc.Button("Apply", color="blue", id='apply_feature_selection', n_clicks=0),
-            html.Div(id="feature-selection-output"),
-=======
-            dmc.Button("Apply", color="blue", id='regression-apply_feature_selection', n_clicks=0),
-            html.Div(id="regression-feature-selection-output"),
+            dmc.Button("Apply", color="blue", id='clustering-apply_feature_selection', n_clicks=0),
+            html.Div(id="clustering-feature-selection-output"),
             dmc.Group(
                 [
                     reset_button,
                     html.Div(
-                        id='regression-proceed-output',
+                        id='clustering-proceed-output',
                     )
                 ],
                 justify="space-between",
             )
->>>>>>> f23d340 (regression done)
         ]
     )
     
     return layout
 
 @callback(
-<<<<<<< HEAD
-    Output("feature-selection-output", "children"),
-    Input('apply_feature_selection', 'n_clicks'),
-=======
-    Output("regression-feature-selection-output", "children"),
-    Output("regression-proceed-output", "children", allow_duplicate=True),
-    Input('regression-apply_feature_selection', 'n_clicks'),
->>>>>>> f23d340 (regression done)
+    Output("clustering-feature-selection-output", "children"),
+    Output("clustering-proceed-output", "children", allow_duplicate=True),
+    Input('clustering-apply_feature_selection', 'n_clicks'),
     State(ModelForm.ids.main("feature_selection", 'main'), "data"),
+    prevent_initial_call = True
 )
 def apply_feature_selection(n_clicks, form_data):
     if n_clicks > 0:
         
         try:
-            df = pd.read_csv(session_get_file_path('preprocessed', extension='csv'))
+            df = pd.read_csv(session_get_file_path('preprocessed', extension='csv'), index_col=0)
             
             session_dict_to_json(form_data, 'feature_selection')
             
             schema = FeatureSelectionSchema(**form_data)
 
-            df = feature_selection(df, schema.target, schema)
+            df = feature_selection(df, schema)
             
             scatter_matrix_fig, heatmap_fig = create_scatter_matrix_and_heatmap(df)
             
@@ -179,7 +131,7 @@ def apply_feature_selection(n_clicks, form_data):
             
             session_df_to_file(df, 'feature_selected')
             
-            return output
+            return output, continue_button
             
         except ValidationError as exc:
             return html.Div(
@@ -203,7 +155,7 @@ def apply_feature_selection(n_clicks, form_data):
                         withCloseButton=True
                     )
                 ]
-            )
+            ), no_update
 
     else:
         raise PreventUpdate

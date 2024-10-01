@@ -4,12 +4,12 @@ from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 import flask
 import uuid
-from pages.sections.regression.utils import session_delete_file, parse_contents, render_upload_header
+from pages.sections.clustering.utils import session_delete_file, parse_contents, render_upload_header, reset_button, continue_button
 
 session = {}
 
 upload_button = dcc.Upload(
-    id='regression-upload-data',
+    id='clustering-upload-data',
     children=dmc.Stack([
         dmc.Flex(DashIconify(icon="ic:outline-cloud-upload", height=30),justify='center'),
         dmc.Text('Drag and Drop or Select Files'),
@@ -29,42 +29,22 @@ upload_button = dcc.Upload(
     },
 )
 
-<<<<<<< HEAD
-layout = dmc.Container(
-    [
-        html.Div(
-            upload_button,
-            id='upload-header'
-        ),
-        html.Div(
-            id='output-data',
-        ),
-    ],
-    fluid=True
-)
-
-@callback(
-    Output('output-data', 'children', allow_duplicate=True),
-    Output('upload-header', 'children', allow_duplicate=True),
-    Input('upload-data', 'contents'),
-    State('upload-data', 'filename'),
-=======
 def layout():
     
     layout = dmc.Stack(
         [
             html.Div(
                 upload_button,
-                id='regression-upload-header'
+                id='clustering-upload-header'
             ),
             html.Div(
-                id='regression-output-data',
+                id='clustering-output-data',
             ),
             dmc.Group(
                 [
                     reset_button,
                     html.Div(
-                        id='regression-proceed-output',
+                        id='clustering-proceed-output',
                     )
                 ],
                 justify="space-between",
@@ -75,33 +55,23 @@ def layout():
     return layout
 
 @callback(
-    Output('regression-output-data', 'children', allow_duplicate=True),
-    Output('regression-upload-header', 'children', allow_duplicate=True),
-    Output('regression-proceed-output', 'children', allow_duplicate=True),
-    Input('regression-upload-data', 'contents'),
-    State('regression-upload-data', 'filename'),
->>>>>>> f23d340 (regression done)
+    Output('clustering-output-data', 'children', allow_duplicate=True),
+    Output('clustering-upload-header', 'children', allow_duplicate=True),
+    Output('clustering-proceed-output', 'children', allow_duplicate=True),
+    Input('clustering-upload-data', 'contents'),
+    State('clustering-upload-data', 'filename'),
     prevent_initial_call=True
 )
 def upload_data_processing(contents, filename):
     if contents is not None:
         
-        upload_header = no_update
-        
         try:
-<<<<<<< HEAD
-            
-            flask.session['session_id'] = str(uuid.uuid4())
-            
-            upload_output = parse_contents(contents, filename)
-            upload_header = render_upload_header(filename)
-=======
                 
             if flask.session.get('session_id', None) is None:
                 flask.session['session_id'] = str(uuid.uuid4())
 
             df = parse_contents(contents, filename, 'rawData')
-            upload_header = render_upload_header(filename, 'regression-rawData')
+            upload_header = render_upload_header(filename, 'clustering-rawData')
             
             # df = df.describe()
             df = df.head(5)
@@ -122,7 +92,8 @@ def upload_data_processing(contents, filename):
                     }
                 )
             )
->>>>>>> f23d340 (regression done)
+            
+            return upload_output, upload_header, continue_button
             
         except Exception as e:
 
@@ -133,16 +104,16 @@ def upload_data_processing(contents, filename):
                 withCloseButton=True
             )
 
-        return upload_output, upload_header
+            return upload_output, no_update, no_update
     
     else:
         
         raise PreventUpdate
 
 @callback(
-    Output('regression-output-data', 'children'),
-    Output('regression-upload-header', 'children'),
-    Input('regression-rawData-remove-data', 'n_clicks'),
+    Output('clustering-output-data', 'children'),
+    Output('clustering-upload-header', 'children'),
+    Input('clustering-rawData-remove-data', 'n_clicks'),
 )
 def remove_data(n_clicks):
 
